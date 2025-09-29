@@ -1,0 +1,8 @@
+{
+  "name": "Trade Sharer",
+  "version": "1.0.0",
+  "description": "Auto-share trades to Telegram for referrals",
+  "author": "GODSEYE",
+  "permissions": ["read_trades"],
+  "appId": "trade-sharer"
+}

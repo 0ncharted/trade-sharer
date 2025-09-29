@@ -1,0 +1,12 @@
+{
+  "name": "trade-sharer",
+  "version": "1.0.0",
+  "description": "MiniApp to auto-share BasedApp trades to Telegram",
+  "scripts": {
+    "start": "http-server -p 3000"
+  },
+  "dependencies": {
+    "@basedone/miniapp-sdk": "latest",
+    "http-server": "^14.1.1"
+  }
+}
