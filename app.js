@@ -1,4 +1,4 @@
-let client;
+let sdk;
 let botToken;
 let chatId;
 
@@ -6,6 +6,7 @@ async function initSharer() {
     console.log('Start Sharing clicked!');
     document.getElementById('status').innerHTML = '';
     document.getElementById('error').innerHTML = '';
+    document.getElementById('fakeTradeButton').style.display = 'none';
     
     botToken = document.getElementById('botToken').value;
     chatId = document.getElementById('chatId').value;
@@ -18,46 +19,51 @@ async function initSharer() {
     }
     
     try {
-        if (typeof window.MiniAppSDK === 'undefined') {
+        if (typeof MiniAppSDK === 'undefined') {
             throw new Error('MiniAppSDK not loaded. Ensure running in BasedApp TestKit.');
         }
-        client = new window.MiniAppSDK({
+        sdk = MiniAppSDK({
             appId: 'trade-sharer',
+            url: window.location.origin,
+            name: 'Trade Sharer',
             debug: true,
-            permissions: ['read_trades']
+            autoconnect: true,
+            permissions: [
+                'read_trades', // Required for trade execution events
+                'read_balance', // Optional, for balance checks
+                'read_positions', // Optional, for position data
+            ],
         });
         
-        console.log('SDK initialized:', client);
+        console.log('SDK initialized:', sdk);
         
-        client.on('connected', ({ sessionId, permissions }) => {
+        sdk.on('connected', ({ sessionId, permissions }) => {
             console.log('Connected to terminal!', sessionId);
-            document.getElementById('status').innerHTML = '✅ Connected! Listening for trades...';
+            document.getElementById('status').innerHTML = '✅ Connected! Click below to test a fake trade.';
+            document.getElementById('fakeTradeButton').style.display = 'block';
         });
         
-        client.on('error', (error) => {
+        sdk.on('error', (error) => {
             console.error('SDK error:', error);
             document.getElementById('error').innerHTML = 'SDK Error: ' + error.message;
         });
         
-        await client.subscribe('trade.updates');
+        await sdk.subscribe('trade.updates');
         
-        client.on('tradeExecution', async (trade) => {
+        sdk.on('tradeExecution', async (trade) => {
             console.log('Trade detected:', trade);
             await shareTrade(trade);
         });
-        
-        if (confirm('Test with a fake trade?')) {
-            console.log('Testing fake trade');
-            await shareTrade({ symbol: 'ETH-PERP', side: 'buy', size: 0.1, price: 2500, pnl: '+0.5%' });
-        }
     } catch (error) {
         console.error('Init error:', error);
-        document.getElementById('error').innerHTML = 'Failed to initialize: ' + error.message + '. Using manual trade sharing.';
-        if (confirm('SDK failed. Test fake trade anyway?')) {
-            console.log('Testing fake trade');
-            await shareTrade({ symbol: 'ETH-PERP', side: 'buy', size: 0.1, price: 2500, pnl: '+0.5%' });
-        }
+        document.getElementById('error').innerHTML = 'Failed to initialize: ' + error.message + '. Click below to test a fake trade.';
+        document.getElementById('fakeTradeButton').style.display = 'block';
     }
+}
+
+async function testFakeTrade() {
+    console.log('Testing fake trade');
+    await shareTrade({ symbol: 'ETH-PERP', side: 'buy', size: 0.1, price: 2500, pnl: '+0.5%' });
 }
 
 async function shareTrade(trade) {
@@ -87,7 +93,7 @@ async function shareTrade(trade) {
         const data = await response.json();
         if (data.ok) {
             console.log('Trade shared successfully!');
-            document.getElementById('status').innerHTML = '✅ Trade shared!';
+            document.getElementById('status').innerHTML = '✅ Trade shared to Telegram!';
         } else {
             console.error('Share failed:', data);
             document.getElementById('error').innerHTML = 'Failed to share trade: ' + JSON.stringify(data);
