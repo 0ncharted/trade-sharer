@@ -4,9 +4,14 @@ let chatId;
 
 async function initSharer() {
     console.log('Start Sharing clicked!');
+    const fakeTradeButton = document.getElementById('fakeTradeButton');
+    if (fakeTradeButton) {
+        fakeTradeButton.style.display = 'none';
+    } else {
+        console.error('Fake Trade Button not found in DOM');
+    }
     document.getElementById('status').innerHTML = '';
     document.getElementById('error').innerHTML = '';
-    document.getElementById('fakeTradeButton').style.display = 'none';
     
     botToken = document.getElementById('botToken').value;
     chatId = document.getElementById('chatId').value;
@@ -29,7 +34,7 @@ async function initSharer() {
             debug: true,
             autoconnect: true,
             permissions: [
-                'read_trades', // Keep for trade execution, pending team confirmation
+                'read_trades',
                 'read_balance',
                 'read_positions',
             ],
@@ -39,8 +44,11 @@ async function initSharer() {
         
         sdk.on('connected', ({ sessionId, permissions }) => {
             console.log('Connected to terminal!', sessionId);
-            document.getElementById('status').innerHTML = '✅ Connected! Click below to test a fake trade.';
-            document.getElementById('fakeTradeButton').style.display = 'block';
+            const fakeTradeButton = document.getElementById('fakeTradeButton');
+            if (fakeTradeButton) {
+                document.getElementById('status').innerHTML = '✅ Connected! Click below to test a fake trade.';
+                fakeTradeButton.style.display = 'block';
+            }
         });
         
         sdk.on('error', (error) => {
@@ -57,7 +65,10 @@ async function initSharer() {
     } catch (error) {
         console.error('Init error:', error);
         document.getElementById('error').innerHTML = 'Failed to initialize: ' + error.message + '. Click below to test a fake trade.';
-        document.getElementById('fakeTradeButton').style.display = 'block';
+        const fakeTradeButton = document.getElementById('fakeTradeButton');
+        if (fakeTradeButton) {
+            fakeTradeButton.style.display = 'block';
+        }
     }
 }
 
