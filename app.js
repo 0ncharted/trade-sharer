@@ -2,7 +2,6 @@ let sdk;
 let botToken;
 let chatId;
 
-// Ensure DOM is fully loaded before running
 document.addEventListener('DOMContentLoaded', () => {
     async function initSharer() {
         console.log('Start Sharing clicked!');
@@ -27,8 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         try {
             if (typeof MiniAppSDK === 'undefined') {
-                // Fallback: Try loading SDK via CDN if not injected
-                await loadSDK();
+                throw new Error('MiniAppSDK not loaded. Ensure running in BasedApp TestKit.');
             }
             sdk = new MiniAppSDK({
                 appId: 'trade-sharer',
@@ -37,33 +35,55 @@ document.addEventListener('DOMContentLoaded', () => {
                 debug: true,
                 autoconnect: true,
                 permissions: [
-                    'read_trades',
+                    'read_market_data',
                     'read_balance',
                     'read_positions',
+                    'read_trades', // For trade history/execution
                 ],
             });
             
             console.log('SDK initialized:', sdk);
             
-            sdk.on('connected', ({ sessionId, permissions }) => {
+            sdk.on('connected', async ({ sessionId, permissions }) => {
                 console.log('Connected to terminal!', sessionId);
                 const fakeTradeButton = document.getElementById('fakeTradeButton');
                 if (fakeTradeButton) {
-                    document.getElementById('status').innerHTML = '✅ Connected! Click below to test a fake trade.';
-                    fakeTradeButton.style.display = 'block';
+                    document.getElementById('status').innerHTML = '✅ Connected! Requesting trade permissions...';
+                    fakeTradeButton.style.display = 'none';
+                }
+                
+                // Request runtime permissions for trades
+                try {
+                    const granted = await sdk.requestPermissions(['read_trades']);
+                    console.log('Granted permissions:', granted);
+                    if (granted.includes('read_trades')) {
+                        document.getElementById('status').innerHTML = '✅ Trade permissions granted! Listening for trades...';
+                        await sdk.subscribe('trade.update'); // Subscribe to trade updates
+                        sdk.on('market.trades', async (trade) => { // Listen for trade executed
+                            console.log('Trade detected:', trade);
+                            await shareTrade(trade);
+                        });
+                        if (fakeTradeButton) {
+                            fakeTradeButton.style.display = 'block';
+                        }
+                    } else {
+                        document.getElementById('error').innerHTML = 'Trade permissions denied. Manual sharing enabled.';
+                        if (fakeTradeButton) {
+                            fakeTradeButton.style.display = 'block';
+                        }
+                    }
+                } catch (error) {
+                    console.error('Permission request error:', error);
+                    document.getElementById('error').innerHTML = 'Failed to request permissions: ' + error.message + '. Manual sharing enabled.';
+                    if (fakeTradeButton) {
+                        fakeTradeButton.style.display = 'block';
+                    }
                 }
             });
             
             sdk.on('error', (error) => {
                 console.error('SDK error:', error);
                 document.getElementById('error').innerHTML = 'SDK Error: ' + error.message;
-            });
-            
-            await sdk.subscribe('trade.updates');
-            
-            sdk.on('tradeExecution', async (trade) => {
-                console.log('Trade detected:', trade);
-                await shareTrade(trade);
             });
         } catch (error) {
             console.error('Init error:', error);
@@ -75,19 +95,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Attach event listener after DOM is ready
-    document.querySelector('button[onclick="initSharer()"]').addEventListener('click', initSharer);
+    // Attach event listener to Start Sharing button
+    const startSharingButton = document.getElementById('startSharing');
+    if (startSharingButton) {
+        startSharingButton.addEventListener('click', initSharer);
+    }
 });
-
-async function loadSDK() {
-    return new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = 'https://unpkg.com/@basedone/miniapp-sdk@latest/dist/index.umd.js';
-        script.onload = () => resolve();
-        script.onerror = () => reject(new Error('Failed to load MiniAppSDK from CDN'));
-        document.head.appendChild(script);
-    });
-}
 
 async function testFakeTrade() {
     console.log('Testing fake trade');
