@@ -22,16 +22,16 @@ async function initSharer() {
         if (typeof MiniAppSDK === 'undefined') {
             throw new Error('MiniAppSDK not loaded. Ensure running in BasedApp TestKit.');
         }
-        sdk = MiniAppSDK({
+        sdk = new MiniAppSDK({
             appId: 'trade-sharer',
             url: window.location.origin,
             name: 'Trade Sharer',
             debug: true,
             autoconnect: true,
             permissions: [
-                'read_trades', // Required for trade execution events
-                'read_balance', // Optional, for balance checks
-                'read_positions', // Optional, for position data
+                'read_trades', // Keep for trade execution, pending team confirmation
+                'read_balance',
+                'read_positions',
             ],
         });
         
