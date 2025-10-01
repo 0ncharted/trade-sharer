@@ -1,2 +1,2 @@
-# trade-sharer
-MiniApp to auto-share BasedApp trades to Telegram
+# Trade Sharer MiniApp
+Auto-share trades to Telegram for referrals. Clone and run with `npm install && npm start`.
