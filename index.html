@@ -5,22 +5,114 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trade Sharer MiniApp</title>
     <style> 
-        body { font-family: Arial; padding: 20px; } 
-        input { width: 100%; margin: 10px 0; padding: 10px; } 
-        button { padding: 10px; margin: 5px; background: #007bff; color: white; border: none; cursor: pointer; } 
-        #status { margin-top: 20px; color: green; } 
-        #error { margin-top: 20px; color: red; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            padding: 20px; 
+            max-width: 600px;
+            margin: 0 auto;
+            background: #0a0e27;
+            color: #fff;
+        } 
+        .container {
+            background: #151932;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #00d4ff;
+            margin-bottom: 10px;
+        }
+        input { 
+            width: 100%; 
+            margin: 10px 0; 
+            padding: 12px; 
+            box-sizing: border-box;
+            border: 2px solid #2a2f4f;
+            border-radius: 8px;
+            background: #1a1f3a;
+            color: #fff;
+            font-size: 14px;
+        } 
+        input:focus {
+            outline: none;
+            border-color: #00d4ff;
+        }
+        input::placeholder {
+            color: #666;
+        }
+        button { 
+            padding: 12px 24px; 
+            margin: 10px 5px 5px 0; 
+            background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            color: white; 
+            border: none; 
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        button:disabled {
+            background: #444;
+            cursor: not-allowed;
+            transform: none;
+        }
+        #status { 
+            margin-top: 20px; 
+            padding: 12px;
+            color: #00ff88;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 8px;
+            display: none;
+        } 
+        #error { 
+            margin-top: 20px; 
+            padding: 12px;
+            color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.1);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            border-radius: 8px;
+            display: none;
+        }
+        .show { display: block !important; }
+        label { 
+            font-weight: 600;
+            display: block;
+            margin-top: 15px;
+            color: #aaa;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
     </style>
 </head>
 <body>
-    <h1>Trade Sharer for Referrals</h1>
-    <p>Enter your Telegram details to auto-share trades with your group:</p>
-    <label>Bot Token:</label><input type="password" id="botToken" placeholder="e.g., 123456:ABC-DEF...">
-    <label>Group Chat ID:</label><input type="text" id="chatId" placeholder="e.g., -1001234567890">
-    <button id="startSharing">Start Sharing</button>
-    <button id="fakeTradeButton" style="display: none;">Test Fake Trade</button>
-    <div id="status"></div>
-    <div id="error"></div>
-    <script src="app.js"></script>
+    <div class="container">
+        <h1>🚀 Trade Sharer for Referrals</h1>
+        <label>Telegram Bot Token:</label>
+        <input type="password" id="botToken" placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz">
+        
+        <label>Group Chat ID:</label>
+        <input type="text" id="chatId" placeholder="-1001234567890">
+        
+        <label>Your Referral Code:</label>
+        <input type="text" id="referralCode" placeholder="YOURCODE" value="GODSEYE">
+        
+        <button id="startSharing">🎯 Start Auto-Sharing</button>
+        <button id="testShare">🧪 Test Share to Telegram</button>  <!-- NEW: Test button -->
+        
+        <div id="status"></div>
+        <div id="error"></div>
+    </div>
+
+    <script type="module" src="/app.js"></script>
 </body>
 </html>
