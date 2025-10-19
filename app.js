@@ -84,40 +84,45 @@ async function initSharer() {
 
         showStatus("✅ Permissions granted! Listening for trades/orders...");
 
-        // Subscribe to trades (per SDK guide)
+        // Subscribe to trades
         await client.subscribe("trade.update");
         client.on("trade.update", async (trade) => {
           console.log("Trade received:", trade);
           await shareTrade(trade);
         });
 
-        // Subscribe to orders (per SDK guide)
+        // Subscribe to orders
         await client.subscribe("order.update");
-        client.on("order.update", async (order) => {  // FIXED: Made callback async to allow await
-          console.log("Order update:", order);
-          if (order.status === 'filled') {
-            const tradeData = {
-              symbol: order.symbol,
-              side: order.side,
-              size: order.size,
-              price: order.price || order.avgPrice,
-              timestamp: order.timestamp,
-              realizedPnl: order.realizedPnl || 0
-            };
-            console.log("Filled order as trade:", tradeData);
-            await shareTrade(tradeData);
+        client.on("order.update", async (data) => {
+          console.log("Order update full data:", data);
+          const orders = data || [];
+          if (orders.length > 0) {
+            for (const order of orders) {  // FIXED: Use for...of for await inside
+              if (order.status === 'filled') {
+                const tradeData = {
+                  symbol: order.symbol,
+                  side: order.side,
+                  size: order.size,
+                  price: order.price || order.avgPrice,
+                  timestamp: order.timestamp,
+                  realizedPnl: order.realizedPnl || 0
+                };
+                console.log("Filled order as trade:", tradeData);
+                await shareTrade(tradeData);
+              }
+            }
           }
         });
 
-        // Poll for orders (using sendCommand per SDK guide)
+        // Poll for orders
         pollInterval = setInterval(async () => {
           if (client && client.connected) {
             try {
-              const orders = await client.sendCommand('order.query', {});  // Docs: order.query for orders
+              const orders = await client.sendCommand('order.query', {});
               console.log("Polled orders:", orders);
               const newFilled = orders.data.filter(o => o.status === 'filled' && !lastOrders.some(lo => lo.id === o.id));
               if (newFilled.length > 0) {
-                newFilled.forEach(order => {
+                for (const order of newFilled) {  // FIXED: Use for...of for await inside
                   const tradeData = {
                     symbol: order.symbol,
                     side: order.side,
@@ -128,7 +133,7 @@ async function initSharer() {
                   };
                   console.log("New filled order from poll:", tradeData);
                   shareTrade(tradeData);
-                });
+                }
               }
               lastOrders = orders.data.map(o => ({ id: o.id, status: o.status }));
             } catch (err) {
@@ -139,37 +144,35 @@ async function initSharer() {
 
       } catch (error) {
         console.error("Permission error:", error);
-        showError("⚠️ Failed to request permissions: " + error.message);
+        showError("Failed to request permissions: " + error.message);
       }
     });
 
     client.on("disconnected", () => {
-      console.log("SDK disconnected");
       if (pollInterval) clearInterval(pollInterval);
-      showError("❌ Disconnected. Refresh and reconnect.");
+      showError("Disconnected. Refresh and reconnect.");
     });
 
     client.on("error", (error) => {
       console.error("SDK Error:", error);
-      showError("❌ SDK Error: " + error.message);
+      showError("SDK Error: " + error.message);
     });
   } catch (error) {
     console.error("Initialization error:", error);
-    showError("❌ Failed to initialize: " + error.message);
+    showError("Failed to initialize: " + error.message);
   }
 }
 
-// FIXED: Test reads inputs directly (independent)
 async function testShare() {
   const currentBotToken = document.getElementById("botToken").value.trim() || localStorage.getItem('tradeSharerBotToken') || '';
   const currentChatId = document.getElementById("chatId").value.trim() || localStorage.getItem('tradeSharerChatId') || '';
   if (!currentBotToken || !currentChatId) {
-    showError("⚠️ Enter bot token and chat ID first!");
+    showError("Enter bot token and chat ID first!");
     return;
   }
   const testMessage = "🧪 Test from Trade Sharer - Setup OK! (Date: October 18, 2025)";
   try {
-    showStatus("⏳ Sending test to Telegram...");
+    showStatus("Sending test to Telegram...");
     const formData = new FormData();
     formData.append("chat_id", currentChatId);
     formData.append("text", testMessage);
@@ -185,17 +188,17 @@ async function testShare() {
     if (data.ok) {
       showStatus("✅ Test sent to Telegram!");
     } else {
-      showError("❌ Test failed: " + (data.description || "Unknown"));
+      showError("Test failed: " + (data.description || "Unknown"));
     }
   } catch (error) {
     console.error("Test error:", error);
-    showError("❌ Test error: " + error.message);
+    showError("Test error: " + error.message);
   }
 }
 
 async function shareTrade(trade) {
   console.log("Sharing trade:", trade);
-  showStatus("⏳ Sending to Telegram...");
+  showStatus("Sending to Telegram...");
 
   const refCode = referralCode || "GODSEYE";
   const referralLink = `https://app.based.one/r/${refCode}`;
@@ -257,11 +260,11 @@ async function shareTrade(trade) {
         errorMsg = "Group deleted or deactivated";
       }
 
-      showError("❌ Share failed: " + errorMsg);
+      showError("Share failed: " + errorMsg);
     }
   } catch (error) {
     console.error("Share error:", error);
-    showError("❌ Share error: " + error.message);
+    showError("Share error: " + error.message);
   }
 }
 
